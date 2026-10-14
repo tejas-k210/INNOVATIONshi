@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CellPulse — Physics-Informed Battery Intelligence & Second-Life Assessment</title>
+  <meta name="description" content="Physics-Informed Incremental Capacity Analysis (dQ/dV), 3D Virtual Battery Pack Mapping, and Second-Life Suitability & Valuation Engine for EV Batteries.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Three.js + OrbitControls for 3D Battery Module -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <!-- Chart.js for Incremental Capacity and Degradation Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- STICKY TOP NAVBAR -->
+  <header class="app-header" id="appHeader">
+    <div class="nav-container">
+      <div class="brand-group" id="navBrand" onclick="switchView('overview')">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect>
+            <line x1="22" y1="11" x2="22" y2="13"></line>
+            <path d="M7 12h2l1-2 2 4 1-2h2"></path>
+          </svg>
+          <span class="pulsing-dot" title="Diagnostic System Active"></span>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">CellPulse <span class="brand-badge">EV Battery Tech</span></div>
+          <div class="brand-subtitle">Theme H: Smart Vehicles / EV Motor & Battery Technology</div>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <button class="nav-link-btn active" id="btnNavOverview" onclick="switchView('overview')">Overview</button>
+        <button class="nav-link-btn" id="btnNavHowItWorks" onclick="scrollToSection('howItWorksSection')">How It Works</button>
+        <button class="nav-link-btn" id="btnNavWhoItHelps" onclick="scrollToSection('personaSection')">Who It Helps</button>
+        <button class="btn-primary-launch" id="btnLaunchWorkspace" onclick="switchView('workspace')">
+          <span>Launch Diagnostic Workspace</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- VIEW 1: PROJECT OVERVIEW (HOME) -->
+  <main class="view-container active" id="viewOverview">
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="heroSection">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge-spark">✦</span>
+          <span>Diagnose the degradation. Predict the future. Unlock the next life.</span>
+        </div>
+        <h1 class="hero-title">
+          Physics-Informed <span class="gradient-text">Battery Intelligence</span> & Second-Life Assessment
+        </h1>
+        <div class="brief-card" id="briefCard">
+          <div class="brief-icon">💡</div>
+          <p class="brief-text">
+            <strong>CellPulse</strong> studies how an EV battery is ageing, estimates how much useful life it may have left, and suggests whether it could be reused for another purpose instead of being discarded or immediately recycled.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn-hero-primary" id="btnRunTwoBatteryStory" onclick="runDemoStoryMode()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+            <span>Run Two-Battery Demo Story</span>
+          </button>
+          <button class="btn-hero-secondary" id="btnHeroUpload" onclick="openUploadModalFromHome()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            <span>Upload Battery CSV</span>
+          </button>
+        </div>
+        <div class="hero-stats-row">
+          <div class="hero-stat">
+            <span class="stat-number">24</span>
+            <span class="stat-label">Cell-by-Cell 3D Digital Twin</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="hero-stat">
+            <span class="stat-number">dQ/dV</span>
+            <span class="stat-label">Physics Incremental Capacity</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="hero-stat">
+            <span class="stat-number">4</span>
+            <span class="stat-label">Second-Life Pathways Analyzed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Mini-Preview Interactive Card -->
+      <div class="hero-preview-card" id="heroPreviewCard">
+        <div class="preview-header">
+          <div class="preview-title-group">
+            <span class="preview-indicator"></span>
+            <span class="preview-title">Live Physics Diagnostic Preview</span>
+          </div>
+          <span class="preview-tag">dQ/dV Phase Transition</span>
+        </div>
+        <div class="preview-canvas-wrap">
+          <canvas id="miniDqdvCanvas" width="440" height="230"></canvas>
+        </div>
+        <div class="preview-controls">
+          <div class="preview-slider-row">
+            <label for="demoAgeSlider">Simulate Aging: <span id="demoAgeLabel" class="val-highlight">Fresh (100% SOH)</span></label>
+            <input type="range" id="demoAgeSlider" min="50" max="100" value="100" step="1" oninput="updateMiniDqdv(this.value)">
+          </div>
+          <div class="preview-callout">
+            <span class="callout-icon">ℹ</span>
+            <span id="demoAgeDesc">As active material degrades, peak height drops and voltage shifts right (polarization ΔV).</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- The Problem & What Makes CellPulse Different -->
+    <section class="split-section" id="problemSection">
+      <div class="section-badge-center">Core Engineering Insight</div>
+      <h2 class="section-title">The Challenge of EV Battery Second-Life</h2>
+      <p class="section-lead">Why simple percentage health ratings fail to tell the true condition of aged lithium-ion packs.</p>
+
+      <div class="split-grid">
+        <!-- Left: The Problem -->
+        <div class="card-problem">
+          <div class="card-icon-badge danger-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>The Conventional Blind Spot</span>
+          </div>
+          <h3 class="problem-title">Why a Single SOH % Is Insufficient</h3>
+          <p class="problem-text">
+            Commercial battery management systems typically output a single aggregate number like <strong>"82% SOH"</strong>. However, two batteries with identical SOH ratings can have drastically different second-life viability:
+          </p>
+          <ul class="problem-list">
+            <li>
+              <strong>Invisible Cell Weak Links:</strong> In a series pack, a single severely degraded cell (like Cell #14 with 51% SOH) dictates pack thermal runaway risk and early cut-off.
+            </li>
+            <li>
+              <strong>Unknown Degradation Physics:</strong> Capacity fade alone doesn't differentiate between reversible Loss of Lithium Inventory (LLI) and irreversible Loss of Active Material (LAM).
+            </li>
+            <li>
+              <strong>Arbitrary Retirement vs. Value Destruction:</strong> Without cycle projection and transparent reuse-vs-recycling valuation, high-value packs get prematurely shredded.
+            </li>
+          </ul>
+          <div class="problem-highlight-box">
+            "A battery pack is only as safe and capable as its weakest series cell."
+          </div>
+        </div>
+
+        <!-- Right: The CellPulse Innovation (Interactive Tabs) -->
+        <div class="card-innovation">
+          <div class="card-icon-badge success-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            <span>The CellPulse Solution</span>
+          </div>
+          <h3 class="innovation-title">5 Physics-Informed Pillars</h3>
+
+          <div class="innovation-tab-bar" id="innovationTabBar">
+            <button class="inno-tab active" onclick="selectInnoTab(0)">1. Health Checks</button>
+            <button class="inno-tab" onclick="selectInnoTab(1)">2. Physics ICA</button>
+            <button class="inno-tab" onclick="selectInnoTab(2)">3. RUL Projection</button>
+            <button class="inno-tab" onclick="selectInnoTab(3)">4. 3D Pack Twin</button>
+            <button class="inno-tab" onclick="selectInnoTab(4)">5. Valuation Engine</button>
+          </div>
+
+          <div class="innovation-tab-content" id="innoContentBox">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive 4-Step Prototype Workflow Stepper -->
+    <section class="stepper-section" id="howItWorksSection">
+      <div class="section-badge-center">Workflow Pipeline</div>
+      <h2 class="section-title">How CellPulse Evaluates Every Pack</h2>
+      <p class="section-lead">Click on any phase to explore how our physics-informed pipeline operates end-to-end.</p>
+
+      <div class="stepper-grid">
+        <div class="step-card" id="stepCard1" onclick="jumpToStep(1)">
+          <div class="step-number">01</div>
+          <div class="step-tag">Step 1</div>
+          <h4 class="step-heading">UPLOAD DATA</h4>
+          <p class="step-desc">Ingest battery-cycle charge CSV or select standardized simulated vehicle aging presets with verifiable provenance.</p>
+          <div class="step-footer">
+            <span class="step-action">Test Dataset →</span>
+          </div>
+        </div>
+
+        <div class="step-card" id="stepCard2" onclick="jumpToStep(2)">
+          <div class="step-number">02</div>
+          <div class="step-tag">Step 2</div>
+          <h4 class="step-heading">ANALYSE</h4>
+          <p class="step-desc">Extract smoothed dQ/dV Incremental Capacity phase transition curves, measure peak shift (ΔV_peak), and model historical capacity fade.</p>
+          <div class="step-footer">
+            <span class="step-action">View ICA Curves →</span>
+          </div>
+        </div>
+
+        <div class="step-card" id="stepCard3" onclick="jumpToStep(3)">
+          <div class="step-number">03</div>
+          <div class="step-tag">Step 3</div>
+          <h4 class="step-heading">VISUALISE</h4>
+          <p class="step-desc">Inspect all 24 individual cells in an interactive 3D virtual pack. Rotate, zoom, and click any cell to inspect its internal resistance and curves.</p>
+          <div class="step-footer">
+            <span class="step-action">Open 3D Pack →</span>
+          </div>
+        </div>
+
+        <div class="step-card" id="stepCard4" onclick="jumpToStep(4)">
+          <div class="step-number">04</div>
+          <div class="step-tag">Step 4</div>
+          <h4 class="step-heading">RECOMMEND</h4>
+          <p class="step-desc">Score second-life suitability for Solar Storage, Telecom, or Recycling. Compare economic net value with customizable assumption sliders and export reports.</p>
+          <div class="step-footer">
+            <span class="step-action">See Valuation →</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Who Uses CellPulse? Interactive Persona Grid -->
+    <section class="persona-section" id="personaSection">
+      <div class="section-badge-center">Industry Stakeholders</div>
+      <h2 class="section-title">Who Benefits From CellPulse?</h2>
+      <p class="section-lead">Tailored decision support across the circular electric mobility ecosystem.</p>
+
+      <div class="persona-grid">
+        <div class="persona-card">
+          <div class="persona-icon-wrap mint-icon">🚚</div>
+          <h4 class="persona-title">EV Fleet Operators</h4>
+          <p class="persona-role">Commercial Vans, Buses & Delivery Fleets</p>
+          <p class="persona-benefit">
+            Continuously track pack health trajectories, pinpoint deteriorating cell weak links before road failures, and optimize fleet retirement timing.
+          </p>
+          <div class="persona-pill">Prevent Roadside Outages</div>
+        </div>
+
+        <div class="persona-card">
+          <div class="persona-icon-wrap pistachio-icon">🏷️</div>
+          <h4 class="persona-title">Used-EV Buyers & Sellers</h4>
+          <p class="persona-role">Secondary Automotive Marketplaces</p>
+          <p class="persona-benefit">
+            Replace subjective odometer readings with transparent, physics-grounded diagnostic certificates proving true battery degradation condition.
+          </p>
+          <div class="persona-pill">Transparent Vehicle Valuation</div>
+        </div>
+
+        <div class="persona-card">
+          <div class="persona-icon-wrap amber-icon">☀️</div>
+          <h4 class="persona-title">Renewable Energy Companies</h4>
+          <p class="persona-role">Stationary Solar & Microgrid Integrators</p>
+          <p class="persona-benefit">
+            Screen and grade candidate retired vehicle packs to identify stable 80%+ SOH modules for affordable stationary clean energy buffering.
+          </p>
+          <div class="persona-pill">Cut Storage Hardware Costs</div>
+        </div>
+
+        <div class="persona-card">
+          <div class="persona-icon-wrap red-icon">♻️</div>
+          <h4 class="persona-title">Battery Recyclers</h4>
+          <p class="persona-role">Hydrometallurgical & Shredding Facilities</p>
+          <p class="persona-benefit">
+            Rapidly screen arriving packs to separate valuable second-life candidates from high-risk modules requiring immediate critical mineral recovery.
+          </p>
+          <div class="persona-pill">Optimize Material Triage</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transparency & Scientific Integrity Footer Banner -->
+    <section class="transparency-banner" id="transparencyBanner">
+      <div class="transparency-icon">🛡️</div>
+      <div class="transparency-content">
+        <h4 class="transparency-heading">CellPulse Engineering Guardrails & Scientific Integrity</h4>
+        <p class="transparency-text">
+          <strong>Diagnostic Indicator Guardrail:</strong> Incremental Capacity Analysis (ICA) features (peak height and peak shift ΔV) serve as diagnostic indicators of internal electrochemical state changes (Loss of Lithium Inventory & Phase Transitions).<br>
+          <strong>Data Provenance:</strong> Preset batteries are synthesized from public lithium-ion cycle aging benchmarks with explicit labels. Uploaded datasets are processed locally without unauthorized telemetry.<br>
+          <strong>Screening Disclaimer:</strong> CellPulse provides preliminary engineering triage. Physical second-life commissioning mandates rigorous insulation resistance, thermal abuse, and safety compliance tests.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- VIEW 2: DIAGNOSTIC & 3D WORKSPACE -->
+  <main class="view-container" id="viewWorkspace">
+
+    <!-- Top Control Strip & Two-Battery Demo Bar -->
+    <section class="control-strip" id="workspaceControls">
+      <div class="control-left">
+        <span class="control-label">Battery Profile:</span>
+        <div class="preset-pill-group">
+          <button class="preset-pill active" id="btnPresetA" onclick="loadBatteryPreset('battery_a')">
+            <span class="pill-indicator pill-green"></span>
+            <span>Demo Battery A (~83% SOH)</span>
+          </button>
+          <button class="preset-pill" id="btnPresetB" onclick="loadBatteryPreset('battery_b')">
+            <span class="pill-indicator pill-red"></span>
+            <span>Demo Battery B (~64% SOH · Flagged #14)</span>
+          </button>
+        </div>
+
+        <button class="btn-control-action" id="btnCompareAB" onclick="openComparisonDrawer()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+          <span>Compare A vs. B</span>
+        </button>
+
+        <button class="btn-control-action" id="btnUploadModal" onclick="openUploadModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          <span>Upload Custom CSV</span>
+        </button>
+
+        <a class="btn-sample-download" id="btnDownloadSample" href="/api/download-sample-csv" download title="Download sample CSV for testing custom upload">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <span>Sample CSV</span>
+        </a>
+      </div>
+
+      <div class="control-right">
+        <div class="provenance-pill" id="provenancePill" title="Source of battery data">
+          <span class="prov-dot"></span>
+          <span id="provenanceText">[SIMULATED PUBLIC AGEING DATASET — NOT A LIVE VEHICLE CONNECTION]</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Summary Ribbon -->
+    <section class="kpi-ribbon" id="kpiRibbon">
+      <!-- 1. Pack SOH -->
+      <div class="kpi-card" id="kpiSohCard">
+        <div class="kpi-label">
+          <span>Pack State of Health (SOH)</span>
+          <span class="kpi-conf" id="kpiSohConf">±1.2%</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-number" id="kpiSohVal">83.4%</span>
+          <span class="kpi-sub" id="kpiCapacityVal">41.7 Ah / 50 Ah</span>
+        </div>
+        <div class="kpi-meter-bar">
+          <div class="kpi-meter-fill" id="kpiSohBar" style="width: 83.4%;"></div>
+        </div>
+      </div>
+
+      <!-- 2. Remaining Useful Cycles -->
+      <div class="kpi-card" id="kpiRulCard">
+        <div class="kpi-label">
+          <span>Remaining Useful Cycles</span>
+          <span class="kpi-tag" title="Projected cycles until 70% stationary retirement threshold">To 70% Cutoff</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-number" id="kpiRulVal">1,240</span>
+          <span class="kpi-sub" id="kpiCurrentCycle">Cycle #520</span>
+        </div>
+        <div class="kpi-meter-desc">~4.8 years at 260 cycles/yr</div>
+      </div>
+
+      <!-- 3. ICA Primary Peak Shift -->
+      <div class="kpi-card" id="kpiIcaCard">
+        <div class="kpi-label">
+          <span>ICA Primary Peak Shift</span>
+          <span class="kpi-diag-tag">Diagnostic Indicator</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-number" id="kpiPeakShiftVal">+31 mV</span>
+          <span class="kpi-sub" id="kpiPeakVolt">3.916 V (Ref: 3.885 V)</span>
+        </div>
+        <div class="kpi-meter-desc" id="kpiPeakShiftDesc">Low overpotential; minimal resistance rise</div>
+      </div>
+
+      <!-- 4. 24-Cell Status Summary -->
+      <div class="kpi-card" id="kpiCellsCard">
+        <div class="kpi-label">
+          <span>24-Cell Status Summary</span>
+          <span class="kpi-total">4x6 Module</span>
+        </div>
+        <div class="cell-pill-summary">
+          <span class="badge-status-pill pill-healthy" id="pillHealthyCount">24 Healthy</span>
+          <span class="badge-status-pill pill-moderate" id="pillModerateCount">0 Moderate</span>
+          <span class="badge-status-pill pill-flagged" id="pillFlaggedCount">0 Flagged</span>
+        </div>
+        <div class="kpi-meter-desc" id="cellImbalanceDesc">Uniform cell voltage & thermal distribution</div>
+      </div>
+
+      <!-- 5. Recommended Next Step -->
+      <div class="kpi-card kpi-card-rec" id="kpiRecCard">
+        <div class="kpi-label">Recommended Next Step</div>
+        <div class="kpi-rec-badge success-rec" id="kpiRecBadge">
+          Second-Life Candidate: Solar Storage
+        </div>
+        <div class="kpi-meter-desc" id="kpiRecRationale">Suitable for stationary 0.5C buffering</div>
+      </div>
+    </section>
+
+    <!-- Main Workspace Split: 3D Pack (Left) + Charts & Cell Inspector (Right) -->
+    <div class="workspace-main-grid">
+
+      <!-- Left Column: Interactive 3D Virtual Battery Pack -->
+      <div class="panel-3d-pack" id="panel3D">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h3 class="panel-title">Interactive 3D Virtual Battery Pack</h3>
+            <span class="panel-subtitle">24-Cell Prismatic EV Module Twin (4x6 Grid)</span>
+          </div>
+          <div class="pack-actions">
+            <button class="btn-tool-sm" id="btnFilterFlagged" onclick="toggleFilterFlaggedOnly()" title="Focus on Flagged Anomaly Cells">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+              <span>Filter Flagged</span>
+            </button>
+            <button class="btn-tool-sm" id="btnResetView" onclick="reset3DCamera()" title="Reset 3D Camera View">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+              <span>Reset View</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3D Canvas Container -->
+        <div class="canvas-3d-wrapper" id="canvas3DWrapper">
+          <canvas id="threeCanvas"></canvas>
+
+          <!-- Floating HUD Tooltip for Hovered Cell -->
+          <div class="cell-hud-tooltip" id="cellHudTooltip" style="display: none;">
+            <div class="hud-header">
+              <span class="hud-id" id="hudCellId">Cell #01</span>
+              <span class="hud-status-badge" id="hudStatusBadge">Healthy</span>
+            </div>
+            <div class="hud-grid">
+              <div class="hud-item"><span class="hud-lbl">Est. SOH:</span> <strong id="hudSoh">84.2%</strong></div>
+              <div class="hud-item"><span class="hud-lbl">Voltage:</span> <strong id="hudVoltage">3.965 V</strong></div>
+              <div class="hud-item"><span class="hud-lbl">Internal R:</span> <strong id="hudIR">28.4 mΩ</strong></div>
+              <div class="hud-item"><span class="hud-lbl">Temp:</span> <strong id="hudTemp">26.1°C</strong></div>
+            </div>
+            <div class="hud-hint">Click cell to lock & inspect curves</div>
+          </div>
+
+          <!-- Color Legend Overlay -->
+          <div class="canvas-legend">
+            <div class="legend-item"><span class="legend-color color-mint"></span> Healthy (&gt;75% SOH)</div>
+            <div class="legend-item"><span class="legend-color color-amber"></span> Moderate Ageing (60-75%)</div>
+            <div class="legend-item"><span class="legend-color color-red"></span> Flagged Anomaly / Weak Link</div>
+          </div>
+        </div>
+
+        <div class="canvas-transparency-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <span>Note: 3D view maps pack and sample cell measurements across representative module locations for visual inspection.</span>
+        </div>
+      </div>
+
+      <!-- Right Column: Synchronized Diagnostic Graphs & Cell Inspector -->
+      <div class="panel-diagnostics" id="panelDiagnostics">
+        
+        <!-- Tabbed Chart Control Strip -->
+        <div class="chart-tab-strip">
+          <div class="chart-tabs">
+            <button class="chart-tab active" id="tabDqdv" onclick="switchChartTab('dqdv')">
+              <span>Incremental Capacity (dQ/dV)</span>
+            </button>
+            <button class="chart-tab" id="tabRul" onclick="switchChartTab('rul')">
+              <span>Degradation & RUL Trajectory</span>
+            </button>
+          </div>
+
+          <!-- Signal Smoothing Toggle (for dQ/dV) -->
+          <div class="smoothing-toggle-wrap" id="smoothingControl">
+            <label class="switch-label" for="chkSmoothing">
+              <span class="switch-text">Signal Smoothing</span>
+              <input type="checkbox" id="chkSmoothing" checked onchange="toggleSmoothing(this.checked)">
+              <span class="switch-slider"></span>
+            </label>
+            <span class="smoothing-tag" id="smoothingStatus">Savitzky-Golay ON</span>
+          </div>
+        </div>
+
+        <!-- Chart 1: Incremental Capacity (dQ/dV) -->
+        <div class="chart-container" id="containerDqdv">
+          <div class="chart-sub-bar">
+            <div class="chart-legend-custom">
+              <span class="legend-chip"><span class="chip-dash"></span> Fresh Baseline Reference</span>
+              <span class="legend-chip"><span class="chip-dot"></span> Raw Measured Data</span>
+              <span class="legend-chip"><span class="chip-solid"></span> Smoothed Inspection Curve</span>
+            </div>
+            <span class="chart-tag" id="chartInspectionTarget">Pack-Level Analysis</span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="dqdvChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Degradation & RUL Trajectory -->
+        <div class="chart-container" id="containerRul" style="display: none;">
+          <div class="chart-sub-bar">
+            <div class="chart-legend-custom">
+              <span class="legend-chip"><span class="chip-solid-sage"></span> Measured Historical Fade</span>
+              <span class="legend-chip"><span class="chip-dash-pistachio"></span> Projected Degradation Path</span>
+              <span class="legend-chip"><span class="chip-ref-line"></span> 70% Second-Life Cutoff</span>
+            </div>
+            <span class="chart-tag">Power-Law RUL Model</span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="rulChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Selected Cell Inspector Drawer -->
+        <div class="cell-inspector-card" id="cellInspector">
+          <div class="inspector-header">
+            <div class="insp-title-group">
+              <div class="insp-badge" id="inspCellBadge">Cell #01</div>
+              <h4 class="insp-name" id="inspCellName">Selected Cell Inspection</h4>
+            </div>
+            <div class="insp-status" id="inspStatusPill">Healthy</div>
+          </div>
+          <div class="inspector-metrics-grid">
+            <div class="insp-metric">
+              <span class="metric-label">Estimated Cell SOH</span>
+              <strong class="metric-val" id="inspSoh">84.2%</strong>
+            </div>
+            <div class="insp-metric">
+              <span class="metric-label">Terminal Voltage</span>
+              <strong class="metric-val" id="inspVoltage">3.965 V</strong>
+            </div>
+            <div class="insp-metric">
+              <span class="metric-label">Internal Resistance</span>
+              <strong class="metric-val" id="inspIR">28.4 mΩ</strong>
+            </div>
+            <div class="insp-metric">
+              <span class="metric-label">Cell Temperature</span>
+              <strong class="metric-val" id="inspTemp">26.1°C</strong>
+            </div>
+            <div class="insp-metric">
+              <span class="metric-label">ICA Peak Voltage</span>
+              <strong class="metric-val" id="inspIcaPeak">3.916 V</strong>
+            </div>
+            <div class="insp-metric">
+              <span class="metric-label">Peak Shift ΔV</span>
+              <strong class="metric-val" id="inspPeakShift">+31 mV</strong>
+            </div>
+          </div>
+          <div class="insp-anomalies" id="inspAnomaliesBox" style="display: none;">
+            <!-- Anomaly warnings populated if flagged -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Lower Section: Second-Life Matching & Valuation Calculator -->
+    <div class="workspace-lower-grid">
+
+      <!-- Second-Life Application Matching Panel -->
+      <section class="panel-card" id="secondLifePanel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h3 class="panel-title">Second-Life Application Matching</h3>
+            <span class="panel-subtitle">Physics & SOH-Grounded Suitability Scoring</span>
+          </div>
+          <div class="screening-pill">Preliminary Screening Aid</div>
+        </div>
+
+        <div class="screening-banner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <span>Preliminary screening aid only — not a safety certification. Real reuse requires qualified electrical, thermal, and safety assessment.</span>
+        </div>
+
+        <div class="pathway-cards-grid" id="pathwayCardsGrid">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </section>
+
+      <!-- Interactive Reuse vs. Recycling Valuation Calculator -->
+      <section class="panel-card" id="valuationPanel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h3 class="panel-title">Interactive Reuse vs. Recycling Valuation</h3>
+            <span class="panel-subtitle">Transparent Cost-Benefit & Circular Economy Accounting</span>
+          </div>
+          <!-- Currency Toggle -->
+          <div class="currency-toggle">
+            <button class="currency-btn active" id="btnCurrINR" onclick="setValuationCurrency('INR')">₹ INR</button>
+            <button class="currency-btn" id="btnCurrUSD" onclick="setValuationCurrency('USD')">$ USD</button>
+          </div>
+        </div>
+
+        <div class="valuation-body-grid">
+          <!-- Left: Assumption Sliders -->
+          <div class="val-sliders-wrap">
+            <div class="val-slider-item">
+              <div class="slider-header">
+                <label for="valCapacity">Usable Pack Capacity</label>
+                <span class="slider-display" id="valCapacityDisp">40.0 kWh</span>
+              </div>
+              <input type="range" id="valCapacity" min="10" max="100" step="5" value="40" oninput="onValuationSliderChange()">
+            </div>
+
+            <div class="val-slider-item">
+              <div class="slider-header">
+                <label for="valRepurposing">Repurposing & Integration Cost</label>
+                <span class="slider-display" id="valRepurposingDisp">₹3,500 / kWh</span>
+              </div>
+              <input type="range" id="valRepurposing" min="500" max="10000" step="250" value="3500" oninput="onValuationSliderChange()">
+            </div>
+
+            <div class="val-slider-item">
+              <div class="slider-header">
+                <label for="valEfficiency">Round-Trip Efficiency</label>
+                <span class="slider-display" id="valEfficiencyDisp">88%</span>
+              </div>
+              <input type="range" id="valEfficiency" min="70" max="98" step="1" value="88" oninput="onValuationSliderChange()">
+            </div>
+
+            <div class="val-slider-item">
+              <div class="slider-header">
+                <label for="valYears">Expected Second-Life Service Life</label>
+                <span class="slider-display" id="valYearsDisp">6.0 Years</span>
+              </div>
+              <input type="range" id="valYears" min="2" max="10" step="1" value="6" oninput="onValuationSliderChange()">
+            </div>
+
+            <div class="val-slider-item">
+              <div class="slider-header">
+                <label for="valRecycling">Immediate Recycling Recovery Credit</label>
+                <span class="slider-display" id="valRecyclingDisp">₹1,200 / kWh</span>
+              </div>
+              <input type="range" id="valRecycling" min="300" max="4000" step="100" value="1200" oninput="onValuationSliderChange()">
+            </div>
+          </div>
+
+          <!-- Right: Economic Outcomes & CO2e avoided visual -->
+          <div class="val-results-wrap">
+            <div class="val-kpi-grid">
+              <div class="val-metric-card">
+                <span class="val-card-label">Estimated Second-Life Net Value</span>
+                <span class="val-card-num color-mint-text" id="valSecondLifeNet">₹182,450</span>
+                <span class="val-card-sub">After repurposing & integration costs</span>
+              </div>
+
+              <div class="val-metric-card">
+                <span class="val-card-label">Immediate Recycling Value</span>
+                <span class="val-card-num color-amber-text" id="valRecycleNet">₹48,000</span>
+                <span class="val-card-sub">Raw scrap / mineral recovery credit</span>
+              </div>
+            </div>
+
+            <!-- Net Advantage Callout -->
+            <div class="advantage-callout" id="valAdvantageCallout">
+              <div class="adv-left">
+                <span class="adv-label">Second-Life Net Value Advantage</span>
+                <strong class="adv-value" id="valAdvantageVal">+₹134,450</strong>
+              </div>
+              <div class="adv-right">
+                <span class="co2-pill" id="valCo2Pill">🌱 ~2,502 kg CO₂e Avoided</span>
+              </div>
+            </div>
+
+            <!-- Report Export Action -->
+            <div class="report-cta-row">
+              <button class="btn-report-export" id="btnExportReport" onclick="openTraceableReportModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>Export / View Traceable Diagnostic Report</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- MODAL 1: CSV UPLOAD MODAL -->
+  <div class="modal-backdrop" id="modalUpload" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 class="modal-title">Upload Battery Cycle Dataset</h3>
+          <span class="modal-subtitle">Supports CSV logs containing cycle, voltage, current, and capacity</span>
+        </div>
+        <button class="btn-close-modal" onclick="closeUploadModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="dropzone" id="csvDropzone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" onclick="document.getElementById('csvFileInput').click()">
+          <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="handleFileSelected(event)">
+          <div class="dropzone-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          </div>
+          <p class="dropzone-text"><strong>Drag & Drop your battery CSV file here</strong> or click to browse</p>
+          <span class="dropzone-hint">Standard format: cycle, step_time_s, voltage_v, current_a, capacity_ah, temperature_c</span>
+        </div>
+
+        <div class="upload-file-status" id="uploadStatusBox" style="display: none;">
+          <span id="selectedFileName">filename.csv</span>
+          <span id="selectedFileSize">0 KB</span>
+        </div>
+
+        <div class="upload-sample-prompt">
+          <span>Need a test file?</span>
+          <a href="/api/download-sample-csv" download class="link-mint">Download Sample Battery A CSV (Fleet EV)</a>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeUploadModal()">Cancel</button>
+        <button class="btn-primary" id="btnSubmitUpload" onclick="submitUpload()" disabled>Run Full Diagnostics</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: TWO-BATTERY DEMO STORY COMPARISON MODAL -->
+  <div class="modal-backdrop" id="modalComparison" style="display: none;">
+    <div class="modal-dialog modal-large">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 class="modal-title">Two-Battery Demo Story: Battery A vs. Battery B</h3>
+          <span class="modal-subtitle">Comparative Physics-Informed Degradation & Second-Life Assessment</span>
+        </div>
+        <button class="btn-close-modal" onclick="closeComparisonDrawer()">&times;</button>
+      </div>
+
+      <div class="modal-body comparison-modal-body">
+        <div class="comparison-grid">
+          <!-- Column A -->
+          <div class="comp-col comp-col-a">
+            <div class="comp-card-header">
+              <span class="comp-badge success-pill">Candidate: Solar Storage</span>
+              <h4 class="comp-col-title">Battery A: Moderate Ageing</h4>
+              <p class="comp-col-sub">Commercial Delivery Fleet Pack (520 Cycles)</p>
+            </div>
+            <div class="comp-metric-table">
+              <div class="comp-row"><span class="cr-label">Pack SOH</span><strong class="cr-val color-mint-text">83.4% ± 1.2%</strong></div>
+              <div class="comp-row"><span class="cr-label">ICA Peak Shift (ΔV_peak)</span><strong class="cr-val">+31 mV (Low Overpotential)</strong></div>
+              <div class="comp-row"><span class="cr-label">Cell Balance</span><strong class="cr-val">24 / 24 Healthy Cells</strong></div>
+              <div class="comp-row"><span class="cr-label">Flagged Anomalies</span><strong class="cr-val color-mint-text">None Detected (0)</strong></div>
+              <div class="comp-row"><span class="cr-label">Projected RUL (to 70%)</span><strong class="cr-val">~1,240 cycles (~4.8 yrs)</strong></div>
+              <div class="comp-row"><span class="cr-label">Best Second-Life Pathway</span><strong class="cr-val">Solar Energy Storage (93/100)</strong></div>
+              <div class="comp-row"><span class="cr-label">Indicative Second-Life Net</span><strong class="cr-val">₹182,450</strong></div>
+              <div class="comp-row"><span class="cr-label">Net Advantage over Recycling</span><strong class="cr-val color-mint-text">+₹134,450</strong></div>
+            </div>
+            <button class="btn-select-preset" onclick="loadBatteryPreset('battery_a'); closeComparisonDrawer();">Load Battery A in Workspace</button>
+          </div>
+
+          <!-- VS Divider -->
+          <div class="comp-divider-col">
+            <div class="comp-vs-badge">VS</div>
+          </div>
+
+          <!-- Column B -->
+          <div class="comp-col comp-col-b">
+            <div class="comp-card-header">
+              <span class="comp-badge danger-pill">Candidate: Direct Recycling</span>
+              <h4 class="comp-col-title">Battery B: High Degradation</h4>
+              <p class="comp-col-sub">Aged Pack with Flagged Cell #14 (880 Cycles)</p>
+            </div>
+            <div class="comp-metric-table">
+              <div class="comp-row"><span class="cr-label">Pack SOH</span><strong class="cr-val color-red-text">64.2% ± 2.4%</strong></div>
+              <div class="comp-row"><span class="cr-label">ICA Peak Shift (ΔV_peak)</span><strong class="cr-val color-red-text">+114 mV (Severe Impedance)</strong></div>
+              <div class="comp-row"><span class="cr-label">Cell Balance</span><strong class="cr-val color-red-text">Cell #14 Anomaly (51.4% SOH)</strong></div>
+              <div class="comp-row"><span class="cr-label">Flagged Anomalies</span><strong class="cr-val color-red-text">1 Flagged (+8.4°C Hotspot)</strong></div>
+              <div class="comp-row"><span class="cr-label">Projected RUL (to 70%)</span><strong class="cr-val color-red-text">0 cycles (Below 70% Cutoff)</strong></div>
+              <div class="comp-row"><span class="cr-label">Best Second-Life Pathway</span><strong class="cr-val">Battery Recycling Assessment (94/100)</strong></div>
+              <div class="comp-row"><span class="cr-label">Immediate Recycling Recovery</span><strong class="cr-val">₹48,000</strong></div>
+              <div class="comp-row"><span class="cr-label">Net Advantage over Recycling</span><strong class="cr-val color-red-text">-₹26,800 (Repurposing Loss)</strong></div>
+            </div>
+            <button class="btn-select-preset" onclick="loadBatteryPreset('battery_b'); closeComparisonDrawer();">Load Battery B in Workspace</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: TRACEABLE DIAGNOSTIC REPORT MODAL (PRINT-READY) -->
+  <div class="modal-backdrop" id="modalReport" style="display: none;">
+    <div class="modal-dialog modal-report-dialog">
+      <div class="modal-header modal-report-no-print">
+        <div class="modal-title-group">
+          <h3 class="modal-title">Traceable Diagnostic Report</h3>
+          <span class="modal-subtitle">Official CellPulse Battery Health & Second-Life Assessment Certificate</span>
+        </div>
+        <div class="report-header-actions">
+          <button class="btn-secondary" onclick="printReport()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            <span>Print / Save as PDF</span>
+          </button>
+          <button class="btn-secondary" onclick="downloadJsonReport()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <span>Download JSON</span>
+          </button>
+          <button class="btn-close-modal" onclick="closeTraceableReportModal()">&times;</button>
+        </div>
+      </div>
+
+      <!-- Printable Document Container -->
+      <div class="report-print-content" id="reportPrintArea">
+        <div class="report-doc-header">
+          <div class="rd-brand">
+            <span class="rd-logo-icon">⚡</span>
+            <div>
+              <h2 class="rd-title">CellPulse Diagnostic Certificate</h2>
+              <span class="rd-sub">Theme H: Smart Vehicles / EV Motor & Battery Technology</span>
+            </div>
+          </div>
+          <div class="rd-meta">
+            <div><strong>Report ID:</strong> <span id="repId">CP-84920</span></div>
+            <div><strong>Date & Time:</strong> <span id="repDate">2026-10-14 10:30 UTC</span></div>
+            <div><strong>Provenance:</strong> <span id="repProvenance">Simulated Aging Dataset</span></div>
+          </div>
+        </div>
+
+        <div class="rd-section">
+          <h4 class="rd-sec-heading">1. Pack Health & Diagnostic Summary</h4>
+          <table class="rd-table">
+            <tbody>
+              <tr>
+                <td><strong>Pack State of Health (SOH)</strong></td>
+                <td id="repSoh">83.4% ± 1.2%</td>
+                <td><strong>Current Recorded Cycles</strong></td>
+                <td id="repCycles">520 Cycles</td>
+              </tr>
+              <tr>
+                <td><strong>Nominal / Estimated Capacity</strong></td>
+                <td id="repCapacity">50.0 Ah / 41.7 Ah</td>
+                <td><strong>Module Cell Topology</strong></td>
+                <td>24 Prismatic Cells (4x6 Matrix)</td>
+              </tr>
+              <tr>
+                <td><strong>ICA Peak Voltage (V_peak)</strong></td>
+                <td id="repPeakV">3.916 V</td>
+                <td><strong>ICA Peak Shift (ΔV_peak)</strong></td>
+                <td id="repPeakShift">+31 mV (Diagnostic Indicator)</td>
+              </tr>
+              <tr>
+                <td><strong>Cell Condition Breakdown</strong></td>
+                <td colspan="3" id="repCellSummary">24 Healthy · 0 Moderate · 0 Flagged Weak Links</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="rd-section" id="repFlaggedSection" style="display: none;">
+          <h4 class="rd-sec-heading rd-sec-danger">2. Flagged Cell Anomaly Notice</h4>
+          <div class="rd-alert-box" id="repFlaggedBox">
+            <!-- Populated if flagged cells exist -->
+          </div>
+        </div>
+
+        <div class="rd-section">
+          <h4 class="rd-sec-heading">3. Second-Life Suitability & Valuation Assessment</h4>
+          <table class="rd-table">
+            <tbody>
+              <tr>
+                <td><strong>Primary Recommendation</strong></td>
+                <td colspan="3"><strong id="repRecBadge">Second-Life Candidate: Solar Storage</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Estimated Remaining Cycles (to 70% SOH)</strong></td>
+                <td id="repRulCycles">1,240 cycles (~4.8 years)</td>
+                <td><strong>Avoided Manufacturing CO₂e</strong></td>
+                <td id="repCo2">~2,502 kg CO₂e</td>
+              </tr>
+              <tr>
+                <td><strong>Indicative Second-Life Net Value</strong></td>
+                <td id="repNetVal">₹182,450</td>
+                <td><strong>Immediate Recycling Scrap Value</strong></td>
+                <td id="repRecycleVal">₹48,000</td>
+              </tr>
+              <tr>
+                <td><strong>Net Value Advantage (Reuse vs Scrap)</strong></td>
+                <td colspan="3"><strong id="repAdvantageVal" class="color-mint-text">+₹134,450</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="rd-section">
+          <h4 class="rd-sec-heading">4. Engineering Guardrails & Regulatory Disclaimer</h4>
+          <p class="rd-disclaimer">
+            This certificate is generated by the CellPulse Physics-Informed Diagnostic Engine as a preliminary engineering triage aid. ICA features (peak height and shift) serve as diagnostic indicators of internal physical degradation. True second-life grid or telecom commissioning requires hands-on high-voltage insulation tests, thermal dissipation characterization, and compliance with IEC 62619 / UL 1974 second-life battery standards.
+          </p>
+        </div>
+
+        <div class="rd-footer-signatures">
+          <div class="rd-sig-block">
+            <div class="rd-sig-line"></div>
+            <span>CellPulse Automated Diagnostic Agent</span>
+          </div>
+          <div class="rd-sig-block">
+            <div class="rd-sig-line"></div>
+            <span>Certified Battery Testing Lead</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
